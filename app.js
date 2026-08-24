@@ -10,12 +10,12 @@ const mongo_client = new MongoClient(url);
 
 
 const transporter = nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io",
+  host: process.env.SMTP_HOSTNAME,
   port: 587,
   secure: false, // use STARTTLS (upgrade connection to TLS after connecting)
   auth: {
-    user: "9de034f814c4a4",
-    pass: "5d37671adfc798",
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
   },
 });
 
@@ -79,7 +79,52 @@ server.get("/verify", async(request, response) => {
 
     console.log(find_user);
 
-    
+    if(find_user){
+
+        if(find_user.is_email_verified == false){
+            await mongo_client.db("backend-db").collection("users").updateOne({email: user_email_to_verify}, {$set: { is_email_verified: true }})
+            
+            response.status(201).send({
+                message: "Email Verified",
+                code: 'success',
+                data: {
+                    email: user_email_to_verify
+                }
+
+            })
+            
+        }else{
+
+            response.status(200).send({
+                message: "Email already verified",
+                code: 'error',
+                data: {
+                    email: user_email_to_verify
+                }
+
+            })
+
+
+        }
+
+       
+
+
+       
+
+    }else{
+
+        response.status(400).send({
+            message: "Email does not exist",
+            code: 'error',
+            data: {
+                email: user_email_to_verify
+            }
+
+        })
+
+    }
+   
 
 
 });
