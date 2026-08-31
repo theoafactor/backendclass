@@ -1,4 +1,9 @@
 const express = require("express");
+const session = require('express-session');
+const bcrypt = require('bcrypt');
+
+
+
 require('dotenv').config()
 
 const { MongoClient } = require("mongodb");
@@ -24,17 +29,34 @@ const transporter = nodemailer.createTransport({
 // create a simple server
 const server = express();
 
+server.use(session({
+  secret: "this is a simple1234567sec",
+  resave: false,
+  saveUninitialized: true,
+  cookie: function(req) {
+    var match = req.url.match(/^\/([^/]+)/);
+    return {
+      path: match ? '/' + match[1] : '/',
+      httpOnly: true,
+      secure: req.secure || false,
+      maxAge: 60000
+    }
+  }
+}))
+
 server.use(express.json());
 
 // create the routes 
-server.get("/search", (request, response) => {
+server.get("/search", async (request, response) => {
+
+    let name = request.query.name;
+    let user_email = request.query.email;
+
+    let result = await mongo_client.db(process.env.BACKEND).collection("users").findOne({ email: user_email })
 
     response.status(200).send({
         message: "You are on the about route",
-        data: {
-            username: "James",
-            id: 123
-        }
+        data: resultx
     })
 })
 
@@ -42,28 +64,28 @@ server.get("/search", (request, response) => {
 server.post("/login", async (request, response) => {
 
   
-
-    let fullname = request.body.fullname;
-    let username = request.body.username;
+    let email = request.body.email;
     let password = request.body.password;
 
-    await mongo_client.connect();
-    
-    let result = await mongo_client.db("backend-db").collection("users").insertOne({
-        fullname: fullname, 
-        username: username,
-        password: password
-    });
+   // check the username if it exists 
+  let result = await mongo_client.db(process.env.BACKEND).collection("users").findOne({ email: email });
 
-    console.log(result)
+  if(result){
+      // the user/account exists 
+      // validate password 
+      response.send({
+        message: "Login works"
+      })
 
-
-    response.status(200).send({
-        message: "User logged in",
-        data: {
-            fullname: fullname
-        }
+  }else{
+    // the user/acscount does not exists
+    response.status(404).send({
+      message: "Invalid account. Email does not exist",
+      code: 'error',
+      data: null
     })
+
+  }
 
 })
 
@@ -137,20 +159,22 @@ server.post("/register", async (request, response) => {
     let email = request.body.email;
     let password = request.body.password;
 
-    if(firstname.length > 0 && lastname.length > 0 && email.length > 0 && password.length > 0){
 
+    if(firstname?.length > 0 && lastname?.length > 0 && email?.length > 0 && password?.length > 0){
 
+        let hashed_password = bcrypt.hashSync(password, 10)
         const user = {
-            firstname, 
-            lastname,
+            firstname: firstname, 
+            lastname: lastname,
             email,
-            password,
+            password: hashed_password,
             is_email_verified: false
         }
 
         //1.  check that the user exists already..
 
-        //2. register the user 
+        try{
+                //2. register the user 
         await mongo_client.connect();
 
         const register_feedback = await mongo_client.db("backend-db").collection("users").insertOne(user);
@@ -334,7 +358,7 @@ server.post("/register", async (request, response) => {
                 Or copy and paste this link into your browser:
               </p>
               <div class="fallback-link" style="word-break:break-all; color:#4f46e5; font-size:14px; background-color:#f7fafc; padding:12px 16px; border-radius:6px; margin:8px 0 24px; border:1px solid #e2e8f0;">
-                <a href="${verification_link}" style="color:#4f46e5; text-decoration:none;">{{VERIFICATION_LINK}}</a>
+                <a href="${verification_link}" style="color:#4f46e5; text-decoration:none;">${verification_link}</a>
               </div>
 
               <!-- EXPIRY NOTE -->
@@ -398,8 +422,26 @@ server.post("/register", async (request, response) => {
         }
 
 
+        }catch(error){
+
+            response.status(500).send({
+              message: "An unexpected error occurred! Please try again later",
+              code: 'error'
+            })
+
+
+        }
+
+
        
 
+
+    }else{
+
+      response.status(400).send({
+        message: "Please enter firstname, lastname, email, password",
+        code: 'error'
+      })
 
     }
 
@@ -407,6 +449,7 @@ server.post("/register", async (request, response) => {
 
 
 })
+
 
 
 // make the server listen for request

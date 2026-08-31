@@ -1,12 +1,21 @@
-function getUser(firstname, lastname){
-    return firstname;
-}
+(async function(){
+
+    async function getUser(username){
+        let firstnam = "James"
+        
+        console.log(firstname)
+    
+
+    }
 
 
-let promise = new Promise((resolve, reject) => {
+    try{
+         let result = await getUser("John")
+    }catch(error){
+        console.log("An error occurred")
+        console.log(error)
+    }
+  
 
-    let is_user = 1;
-    if()
 
-
-}) 
+}())
