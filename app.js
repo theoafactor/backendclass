@@ -1,4 +1,5 @@
 const express = require("express");
+var cors = require('cors')
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 
@@ -28,6 +29,8 @@ const transporter = nodemailer.createTransport({
 
 // create a simple server
 const server = express();
+
+server.use(cors())
 
 server.use(session({
   secret: "this is a simple1234567sec",
@@ -158,9 +161,10 @@ server.post("/register", async (request, response) => {
     let lastname = request.body.lastname;
     let email = request.body.email;
     let password = request.body.password;
+    let bio = request.body.bio;
 
 
-    if(firstname?.length > 0 && lastname?.length > 0 && email?.length > 0 && password?.length > 0){
+    if(firstname?.length > 0 && lastname?.length > 0 && email?.length > 0 && password?.length > 0 && bio?.length > 0){
 
         let hashed_password = bcrypt.hashSync(password, 10)
         const user = {
@@ -168,6 +172,7 @@ server.post("/register", async (request, response) => {
             lastname: lastname,
             email,
             password: hashed_password,
+            bio,
             is_email_verified: false
         }
 
