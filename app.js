@@ -1,7 +1,10 @@
 const express = require("express");
+const multer  = require('multer');
 var cors = require('cors')
 const session = require('express-session');
 const bcrypt = require('bcrypt');
+
+const upload = multer({ dest: 'uploads/' })
 
 
 
@@ -155,7 +158,7 @@ server.get("/verify", async(request, response) => {
 });
 
 
-server.post("/register", async (request, response) => {
+server.post("/register", upload.single('id'), async (request, response) => {
 
     let firstname = request.body.firstname;
     let lastname = request.body.lastname;
@@ -430,7 +433,7 @@ server.post("/register", async (request, response) => {
         }catch(error){
 
             response.status(500).send({
-              message: "An unexpected error occurred! Please try again later",
+              message: "An unexpected error occurred! Please try again later " + error.message,
               code: 'error'
             })
 
