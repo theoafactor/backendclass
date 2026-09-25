@@ -48,7 +48,7 @@ server.use(session({
   }
 }))
 
-// server.use(express.json());
+server.use(express.json());
 
 // create a storage object first
 
@@ -57,12 +57,21 @@ let uploadPath = path.join(__dirname, "uploads/")
 const storage = multer.diskStorage({
   destination: function(request, file, callback){
 
-    console.log("File: ", file)
-
-    console.log("Request --> ", request)
-
     callback(null, uploadPath)
 
+  },
+  filename: function(request, file, calback){
+
+    let extension = path.extname(file.originalname)
+    let usename = file.originalname
+
+    let date = new Date();
+
+    let timestamp = String(date.getTime())
+    
+    console.log("Extension ---> ", extension);
+
+    calback(null, timestamp + path.extname(file.originalname))
   }
 });
 
@@ -193,6 +202,9 @@ server.post("/register", upload.single('id'), async (request, response) => {
     let password = request.body.password;
     let bio = request.body.bio;
 
+    console.log(request.file.filename)
+    let id_path = request.file.filename;
+
     // let firstname = "James";
     // let lastname = "Adams";
     // let email = "adams@email.com";
@@ -208,6 +220,7 @@ server.post("/register", upload.single('id'), async (request, response) => {
             email,
             password: hashed_password,
             bio,
+            id_path: id_path,
             is_email_verified: false
         }
 
