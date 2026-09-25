@@ -1,11 +1,9 @@
 const express = require("express");
-const multer  = require('multer');
 var cors = require('cors')
 const session = require('express-session');
 const bcrypt = require('bcrypt');
-
-const upload = multer({ dest: 'uploads/' })
-
+const path = require("path");
+const multer  = require('multer');
 
 
 require('dotenv').config()
@@ -50,7 +48,36 @@ server.use(session({
   }
 }))
 
-server.use(express.json());
+// server.use(express.json());
+
+// create a storage object first
+
+let uploadPath = path.join(__dirname, "uploads/")
+
+const storage = multer.diskStorage({
+  destination: function(request, file, callback){
+
+    console.log("File: ", file)
+
+    console.log("Request --> ", request)
+
+    callback(null, uploadPath)
+
+  }
+});
+
+// use it here
+const upload = multer({ storage: storage })
+
+
+
+server.get("/", function(request, response){
+
+  response.send({
+    message: "Server working fine"
+  });
+
+})
 
 // create the routes 
 server.get("/search", async (request, response) => {
@@ -166,6 +193,11 @@ server.post("/register", upload.single('id'), async (request, response) => {
     let password = request.body.password;
     let bio = request.body.bio;
 
+    // let firstname = "James";
+    // let lastname = "Adams";
+    // let email = "adams@email.com";
+    // let password = "testpassword";
+    // let bio = "Test regis account";
 
     if(firstname?.length > 0 && lastname?.length > 0 && email?.length > 0 && password?.length > 0 && bio?.length > 0){
 
