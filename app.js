@@ -115,9 +115,24 @@ server.post("/login", async (request, response) => {
   if(result){
       // the user/account exists 
       // validate password 
-      response.send({
-        message: "Login works"
-      })
+      let password_check = bcrypt.compareSync(password, result.password)
+
+      if(password_check){
+          response.send({
+            message: "Login works",
+            code: 'success',
+            data: result
+          })
+      }else{
+
+        response.send({
+          message: "Email/Password combination is NOT correct",
+          code: 'error',
+          data: null
+        })
+
+      }
+      
 
   }else{
     // the user/acscount does not exists
@@ -202,8 +217,8 @@ server.post("/register", upload.single('id'), async (request, response) => {
     let password = request.body.password;
     let bio = request.body.bio;
 
-    console.log(request.file.filename)
-    let id_path = request.file.filename;
+    //console.log(request.file.filename)
+    //let id_path = request.file.filename;
 
     // let firstname = "James";
     // let lastname = "Adams";
@@ -220,7 +235,7 @@ server.post("/register", upload.single('id'), async (request, response) => {
             email,
             password: hashed_password,
             bio,
-            id_path: id_path,
+            //id_path: id_path,
             is_email_verified: false
         }
 
